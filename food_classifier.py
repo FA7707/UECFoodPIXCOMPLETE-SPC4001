@@ -6,10 +6,10 @@ Supports Windows 11 NPU acceleration via ONNX Runtime DirectML.
 
 Usage:
     # Train the model (uses GPU/CPU via PyTorch)
-    python food_classifier.py --mode train --data_dir ./UECFOODPIXCOMPLTE/data/UECFoodPIXCOMPLTE
+    python food_classifier.py --mode train --data_dir ./UECFOODPIXCOMPLETE/data
 
     # Evaluate on test set using NPU (DirectML)
-    python food_classifier.py --mode test --data_dir ./UECFOODPIXCOMPLTE/data/UECFoodPIXCOMPLTE
+    python food_classifier.py --mode test --data_dir ./UECFOODPIXCOMPLETE/data
 
     # Classify a single image using NPU
     python food_classifier.py --mode predict --image path/to/image.jpg
@@ -75,13 +75,15 @@ class UECFoodDataset(Dataset):
         self.split = split
         self.transform = transform
 
-        # Read image ids from train.txt / test.txt
-        split_file = self.data_dir / f"{split}.txt"
+        # Split files: train9000.txt / test1000.txt in data_dir
+        split_map = {"train": "train9000.txt", "test": "test1000.txt"}
+        split_file = self.data_dir / split_map[split]
         with open(split_file, "r") as f:
             self.image_ids = [line.strip() for line in f if line.strip()]
 
-        self.img_dir = self.data_dir / split / "img"
-        self.mask_dir = self.data_dir / split / "mask"
+        # Images/masks are inside UECFoodPIXCOMPLETE subdirectory
+        self.img_dir = self.data_dir / "UECFoodPIXCOMPLETE" / split / "img"
+        self.mask_dir = self.data_dir / "UECFoodPIXCOMPLETE" / split / "mask"
 
         # Pre-compute labels from masks
         print(f"Loading {split} labels from masks...")
@@ -387,8 +389,8 @@ def main():
     parser.add_argument("--mode", choices=["train", "test", "predict", "export"],
                         required=True, help="Operation mode")
     parser.add_argument("--data_dir", type=str,
-                        default="./UECFOODPIXCOMPLTE/data/UECFoodPIXCOMPLTE",
-                        help="Path to UECFoodPIXCOMPLTE data directory")
+                        default="./UECFOODPIXCOMPLETE/data",
+                        help="Path to UECFOODPIXCOMPLETE/data directory")
     parser.add_argument("--image", type=str, help="Path to image (predict mode)")
     parser.add_argument("--epochs", type=int, default=20, help="Training epochs")
     parser.add_argument("--batch_size", type=int, default=32, help="Batch size")
